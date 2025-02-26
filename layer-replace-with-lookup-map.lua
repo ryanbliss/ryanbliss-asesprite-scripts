@@ -163,6 +163,8 @@ for it in copy:pixels() do
                 end
             end
         elseif (currentStartIndex + 1) < addAmount then
+            -- this is probably a bit sketchy, since there are likely common denominators...use at your own risk
+            -- it's late and I don't have this problem xD
             currentStartIndex = currentStartIndex + 1
             currentRed = currentStartIndex
             currentGreen = currentStartIndex
