@@ -54,6 +54,12 @@ local cel = getActiveCel(currentLayer, activeFrame)
 
 -- Prepare the dialog
 local dlg = Dialog()
+dlg:number{
+    id = "addAmount",
+    label = "Increment RGB values by",
+    text = "4",
+    decimals = 0
+}
 
 -- Buttons
 dlg:button{
@@ -74,12 +80,6 @@ dlg:show()
 
 -- Get dialog data
 local data = dlg.data
-local currentRed = 0
-local currentGreen = 0
-local currentBlue = 0
-local currentStartIndex = 0
-local addAmount = 2
-local ceiling = 255 - addAmount
 
 -- Stop on cancel
 if data.cancel then
@@ -101,6 +101,27 @@ local imageCoords = {
 local image = cel.image
 local copy = image:clone()
 
+-- dialog data values values
+local addAmount = data.addAmount
+if addAmount < 1 or addAmount > 11 then
+    app.alert( "Increment count" .. " of " ..data.addAmount .. " must be between 1 and 10")
+    return
+end
+
+-- loop tracking
+local currentRed = 0
+local currentGreen = 0
+local currentBlue = 0
+local currentStartIndex = 0
+local ceiling = 255 - addAmount
+
+local allowRed = true
+local allowGreen = true
+local allowBlue = true
+local blueLoops = 0
+
+-- R -> RG -> RGB -> G -> GB -> B -> BR
+
 -- Overwrite the pixels on the clone
 for it in copy:pixels() do
     local pixel = it()
@@ -108,25 +129,48 @@ for it in copy:pixels() do
     -- Only overwrite a pixel if it has data in it
     if pixelHasData(pixel) then
         local pixelColor = pixelColor.rgba(currentRed, currentGreen, currentBlue, 255)
-        if currentRed <= ceiling then
+        if currentRed <= ceiling and allowRed then
             currentRed = currentRed + addAmount
-        elseif currentGreen <= ceiling then
+        elseif currentGreen <= ceiling and allowGreen then
             currentGreen = currentGreen + addAmount
-            if currentRed > 0 and currentGreen >= ceiling then
-                currentRed = currentStartIndex
-            end
-        elseif currentBlue <= ceiling then
+        elseif currentBlue <= ceiling and allowBlue then
             currentBlue = currentBlue + addAmount
-            if currentRed > 0 and currentBlue >= ceiling then
-                currentRed = currentStartIndex
-            elseif currentGreen > 0 and currentBlue >= ceiling then
-                currentGreen = currentStartIndex
+            if currentBlue >= ceiling then
+                blueLoops = blueLoops + 1
+                if blueLoops == 1 then
+                    -- G -> GB
+                    currentGreen = currentStartIndex + addAmount
+                    currentRed = currentStartIndex
+                    currentBlue = currentStartIndex
+                    allowRed = false
+                    allowGreen = true
+                    allowBlue = true
+                elseif blueLoops == 2 then
+                    -- B
+                    allowBlue = true
+                    allowRed = false
+                    allowGreen = false
+                    currentBlue = currentStartIndex + addAmount
+                    currentRed = currentStartIndex
+                    currentGreen = currentStartIndex
+                elseif blueLoops == 3 then
+                    -- BR
+                    allowRed = true
+                    allowGreen = false
+                    allowBlue = false
+                    currentRed = currentStartIndex + addAmount
+                    currentGreen = currentStartIndex
+                end
             end
-        elseif currentStartIndex < ceiling then
+        elseif (currentStartIndex + 1) < addAmount then
             currentStartIndex = currentStartIndex + 1
             currentRed = currentStartIndex
             currentGreen = currentStartIndex
             currentBlue = currentStartIndex
+            allowRed = true
+            allowGreen = true
+            allowBlue = true
+            blueLoops = 0
         end
         copy:putPixel(it.x, it.y, pixelColor)
     end
