@@ -13,6 +13,6 @@ To use, copy the script(s) you want to use into your Asesprite scripts folder. F
 
 Credit to [christopherwk210](https://github.com/christopherwk210), whose [color-overlay.lua](https://github.com/christopherwk210/aseprite-scripts/blob/master/image/color-overlay.lua) script served as the foundation for `layer-replace-with-lookup-map`.
 
-### export layers
+### export spritesheets
 
-[export-layers.lua](export-layers.lua) is a modified version of [PKGaspi's](https://github.com/PKGaspi/AsepriteScripts) script. These are just so I can override some defaults for my project (e.g., I always want to create a spritesheet).
+[export-spritesheets.lua](export-spritesheets.lua) is a modified version of [PKGaspi's](https://github.com/PKGaspi/AsepriteScripts) script. These are just so I can override some defaults for my project (e.g., I always want to create a spritesheet).
