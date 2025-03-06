@@ -17,18 +17,9 @@ local function GetSubgroupNames(data, layer, depth)
         sub_common_names = data[depth]
     end
     for i, sublayer in ipairs(layer.layers) do
-        local count = 0
-        if sub_common_names[sublayer.name] == nil then
-            count = 0
-        else
-            count = sub_common_names[sublayer.name]
-        end
-        sub_common_names[sublayer.name] = count + 1
+        local defaultChecked = string.find(sublayer.data, "defaultChecked=true") ~= nil;
+        sub_common_names[sublayer.name] = defaultChecked;
         data[depth] = sub_common_names
-
-        if depth > 0 then
-            sublayer.isVisible = false
-         end
 
         if sublayer.isGroup then
             GetSubgroupNames(data, sublayer, depth + 1)
@@ -42,11 +33,11 @@ local dlg = Dialog("Toggle Layer Visibility")
 local data = {}
 GetSubgroupNames(data, app.activeSprite, 0)
 for blah, subnames in ipairs(data) do
-    for key, count in pairs(subnames) do
+    for key, defaultChecked in pairs(subnames) do
         dlg:check{
             id = "checkbox-" .. key,
             label = key,
-            selected = false,
+            selected = defaultChecked,
         }
     end
 end
@@ -57,24 +48,22 @@ dlg:show()
 
 if not dlg.data.ok then return 0 end
 
-local function ToggleVisibilityForName(layer, layerName)
-    for _, sublayer in ipairs(layer.layers) do
-        if sublayer.name == nil then
-            -- do nothing
-        elseif sublayer.name == layerName then
-            sublayer.isVisible = true
+local function ToggleVisibilityForName(layer, layerName, enabled, depth)
+    for i, sublayer in ipairs(layer.layers) do
+        if sublayer.name ~= nil and sublayer.name == layerName then
+            sublayer.isVisible = enabled
         end
     
         if sublayer.isGroup then
-            ToggleVisibilityForName(sublayer, layerName)
+            ToggleVisibilityForName(sublayer, layerName, enabled, depth + 1)
         end
     end
 end
 
 for key, value in pairs(dlg.data) do
-    if string.find(key, "checkbox") and value == true then
+    if string.find(key, "checkbox") then
         local layerName = string.sub(key, 10)
-        ToggleVisibilityForName(app.activeSprite, layerName)
+        ToggleVisibilityForName(app.activeSprite, layerName, value, 0)
     end
 end
 
